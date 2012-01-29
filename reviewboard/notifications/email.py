@@ -121,10 +121,11 @@ class SpiffyEmailMessage(EmailMultiAlternatives):
         # Mark the mail as 'auto-generated' (according to RFC 3834) to
         # hopefully avoid auto replies.
         headers['Auto-Submitted'] = 'auto-generated'
+        headers['From'] = from_email
 
         super(SpiffyEmailMessage, self).__init__(subject, text_body,
-                                                 from_email, to,
-                                                 headers=headers)
+                                                 settings.DEFAULT_FROM_EMAIL,
+                                                 to, headers=headers)
 
         self.cc = cc or []
         self.message_id = None
@@ -256,7 +257,7 @@ def mail_review_request(user, review_request, changedesc=None):
     if not review_request.public or review_request.status == 'D':
         return
 
-    subject = u"Review Request: %s" % review_request.summary
+    subject = u"Review Request %d: %s" % (review_request.id, review_request.summary)
     reply_message_id = None
 
     if review_request.email_message_id:
@@ -306,7 +307,7 @@ def mail_review(user, review):
     review.email_message_id = \
         send_review_mail(user,
                          review_request,
-                         u"Re: Review Request: %s" % review_request.summary,
+                         u"Re: Review Request %d: %s" % (review_request.id, review_request.summary),
                          review_request.email_message_id,
                          None,
                          'notifications/review_email.txt',
@@ -341,7 +342,7 @@ def mail_reply(user, reply):
     reply.email_message_id = \
         send_review_mail(user,
                          review_request,
-                         u"Re: Review Request: %s" % review_request.summary,
+                         u"Re: Review Request %d: %s" % (review_request.id, review_request.summary),
                          review.email_message_id,
                          review.participants,
                          'notifications/reply_email.txt',
